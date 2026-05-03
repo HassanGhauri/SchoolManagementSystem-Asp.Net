@@ -102,3 +102,4 @@ C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSyst
 C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSystem.Api\obj\Debug\net10.0\SchoolManagementSystem.Api.pdb
 C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSystem.Api\obj\Debug\net10.0\SchoolManagementSystem.Api.genruntimeconfig.cache
 C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSystem.Api\obj\Debug\net10.0\ref\SchoolManagementSystem.Api.dll
+C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSystem.Api\obj\Debug\net10.0\SchoolManagementSystem.Api.sourcelink.json

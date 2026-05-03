@@ -33,6 +33,10 @@ namespace SchoolManagementSystem.Api.Models
         [MaxLength(50)]
         public string Role { get; set; } = string.Empty;
 
+        public ICollection<ClassStudent> StudentClasses { get; set; } = new List<ClassStudent>();
+
+        public ICollection<ClassTeacher> TeachingClasses { get; set; } = new List<ClassTeacher>();
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     }

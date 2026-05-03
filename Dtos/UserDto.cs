@@ -1,6 +1,8 @@
-namespace SchoolManagementSystem.Api.Dtos;
-
-public record class UserDto
+namespace SchoolManagementSystem.Api.DTOs
 {
-
+    public class UserDto
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+    }
 }
