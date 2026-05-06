@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolManagementSystem.Api.Data;
 using SchoolManagementSystem.Api.Models;
-
+using SchoolManagementSystem.Api.Dtos;
 namespace SchoolManagementSystem.Api.Controllers
 {
     [ApiController]
@@ -69,7 +69,7 @@ namespace SchoolManagementSystem.Api.Controllers
             user.Email = updatedUser.Email;
             user.PasswordHash = updatedUser.PasswordHash;
             user.Role = updatedUser.Role;
-            user.Age = updatedUser.Age; 
+            user.Age = updatedUser.Age;
 
             await _context.SaveChangesAsync();
 
@@ -93,6 +93,37 @@ namespace SchoolManagementSystem.Api.Controllers
             await _context.SaveChangesAsync();
 
             return Ok($"User {id} Deleted Successfully");
+        }
+
+        // POST: sms/login
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+
+            if (user == null)
+                return Unauthorized("Invalid email or password");
+
+            // ⚠️ Simple comparison (ONLY if password stored as plain text - NOT recommended)
+            if (user.PasswordHash != loginDto.Password)
+                return Unauthorized("Invalid email or password");
+
+            return Ok(new
+            {
+                message = "Login successful",
+                user = new
+                {
+                    user.Id,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    user.Role
+                }
+            });
         }
     }
 }

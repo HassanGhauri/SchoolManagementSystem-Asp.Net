@@ -6,6 +6,18 @@ Env.Load("./.env");
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ✅ Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") // your Next.js app
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 builder.Services.AddControllers();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -17,6 +29,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     ));
 
 var app = builder.Build();
+app.UseCors("AllowFrontend"); // ✅ MUST come before MapControllers()
 
 app.MapControllers();
 
