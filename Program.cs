@@ -12,7 +12,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // your Next.js app
+            policy.WithOrigins("http://localhost:4200") // your Angular app
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
