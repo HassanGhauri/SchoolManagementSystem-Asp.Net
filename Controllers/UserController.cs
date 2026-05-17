@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+
 using SchoolManagementSystem.Api.Data;
 using SchoolManagementSystem.Api.Models;
 using SchoolManagementSystem.Api.Dtos;
+
 namespace SchoolManagementSystem.Api.Controllers
 {
     [ApiController]
@@ -10,21 +13,36 @@ namespace SchoolManagementSystem.Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly JwtService _jwtService;
 
-        public UserController(AppDbContext context)
+        public UserController(
+            AppDbContext context,
+            JwtService jwtService
+        )
         {
             _context = context;
+            _jwtService = jwtService;
         }
 
-        // GET: sms/users
+        // =========================================
+        // GET ALL USERS
+        // Protected Route
+        // =========================================
+
+        [Authorize]
         [HttpGet("users")]
         public async Task<IActionResult> GetUsers()
         {
             var users = await _context.Users.ToListAsync();
+
             return Ok(users);
         }
 
-        // GET: sms/user/1
+        // =========================================
+        // GET USER BY ID
+        // =========================================
+
+        [Authorize]
         [HttpGet("user/{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
@@ -36,7 +54,10 @@ namespace SchoolManagementSystem.Api.Controllers
             return Ok(user);
         }
 
-        // POST: sms/user
+        // =========================================
+        // ADD USER
+        // =========================================
+
         [HttpPost("user")]
         public async Task<IActionResult> AddUser([FromBody] User user)
         {
@@ -45,7 +66,11 @@ namespace SchoolManagementSystem.Api.Controllers
 
             user.CreatedAt = DateTime.UtcNow;
 
+            // TEMPORARY plain password storage
+            // Later replace with BCrypt hashing
+
             _context.Users.Add(user);
+
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -55,9 +80,16 @@ namespace SchoolManagementSystem.Api.Controllers
             });
         }
 
-        // PUT: sms/user/1
+        // =========================================
+        // UPDATE USER
+        // =========================================
+
+        [Authorize]
         [HttpPut("user/{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] User updatedUser)
+        public async Task<IActionResult> UpdateUser(
+            int id,
+            [FromBody] User updatedUser
+        )
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -80,7 +112,12 @@ namespace SchoolManagementSystem.Api.Controllers
             });
         }
 
-        // DELETE: sms/user/1
+        // =========================================
+        // DELETE USER
+        // Admin Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpDelete("user/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -90,31 +127,53 @@ namespace SchoolManagementSystem.Api.Controllers
                 return NotFound("User not found");
 
             _context.Users.Remove(user);
+
             await _context.SaveChangesAsync();
 
-            return Ok($"User {id} Deleted Successfully");
+            return Ok(new
+            {
+                message = $"User {id} Deleted Successfully"
+            });
         }
 
-        // POST: sms/login
+        // =========================================
+        // LOGIN
+        // =========================================
+
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        public async Task<IActionResult> Login(
+            [FromBody] LoginDto loginDto
+        )
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+                .FirstOrDefaultAsync(
+                    u => u.Email == loginDto.Email
+                );
 
             if (user == null)
                 return Unauthorized("Invalid email or password");
 
-            // ⚠️ Simple comparison (ONLY if password stored as plain text - NOT recommended)
+            // TEMPORARY plain text comparison
+            // Replace later with BCrypt.Verify()
+
             if (user.PasswordHash != loginDto.Password)
                 return Unauthorized("Invalid email or password");
+
+            // =====================================
+            // Generate JWT Token
+            // =====================================
+
+            var token = _jwtService.GenerateToken(user);
 
             return Ok(new
             {
                 message = "Login successful",
+
+                token = token,
+
                 user = new
                 {
                     user.Id,

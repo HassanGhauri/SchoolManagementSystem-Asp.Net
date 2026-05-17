@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+
 using SchoolManagementSystem.Api.Data;
 using SchoolManagementSystem.Api.DTOs;
 using SchoolManagementSystem.Api.Models;
@@ -8,6 +10,7 @@ namespace SchoolManagementSystem.Api.Controllers
 {
     [ApiController]
     [Route("sms")]
+    [Authorize]
     public class ClassController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -17,15 +20,23 @@ namespace SchoolManagementSystem.Api.Controllers
             _context = context;
         }
 
-        // GET: sms/classes
+        // =========================================
+        // GET ALL CLASSES
+        // Principal, Teacher, Student
+        // =========================================
+
+        [Authorize(Roles = "Principal,Teacher,Student")]
         [HttpGet("classes")]
         public async Task<IActionResult> GetClasses()
         {
             var classes = await _context.Classes
                 .Include(c => c.ClassTeacher)
-                .Include(c => c.Students).ThenInclude(s => s.Student)
-                .Include(c => c.AssignedTeachers).ThenInclude(t => t.Teacher)
-                .Include(c => c.Subjects).ThenInclude(s => s.Subject)
+                .Include(c => c.Students)
+                    .ThenInclude(s => s.Student)
+                .Include(c => c.AssignedTeachers)
+                    .ThenInclude(t => t.Teacher)
+                .Include(c => c.Subjects)
+                    .ThenInclude(s => s.Subject)
                 .ToListAsync();
 
             var result = classes.Select(cls => new ClassDto
@@ -34,8 +45,8 @@ namespace SchoolManagementSystem.Api.Controllers
                 ClassName = cls.ClassName,
 
                 ClassTeacherName = cls.ClassTeacher != null
-        ? cls.ClassTeacher.FirstName + " " + cls.ClassTeacher.LastName
-        : null,
+                    ? cls.ClassTeacher.FirstName + " " + cls.ClassTeacher.LastName
+                    : null,
 
                 Students = cls.Students.Select(s => new UserDto
                 {
@@ -57,15 +68,22 @@ namespace SchoolManagementSystem.Api.Controllers
             return Ok(result);
         }
 
-        // GET: sms/class/1
+        // =========================================
+        // GET CLASS BY ID
+        // =========================================
+
+        [Authorize(Roles = "Principal,Teacher,Student")]
         [HttpGet("class/{id}")]
         public async Task<IActionResult> GetClassById(int id)
         {
             var cls = await _context.Classes
                 .Include(c => c.ClassTeacher)
-                .Include(c => c.Students).ThenInclude(s => s.Student)
-                .Include(c => c.AssignedTeachers).ThenInclude(t => t.Teacher)
-                .Include(c => c.Subjects).ThenInclude(s => s.Subject)
+                .Include(c => c.Students)
+                    .ThenInclude(s => s.Student)
+                .Include(c => c.AssignedTeachers)
+                    .ThenInclude(t => t.Teacher)
+                .Include(c => c.Subjects)
+                    .ThenInclude(s => s.Subject)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (cls == null)
@@ -77,8 +95,8 @@ namespace SchoolManagementSystem.Api.Controllers
                 ClassName = cls.ClassName,
 
                 ClassTeacherName = cls.ClassTeacher != null
-        ? cls.ClassTeacher.FirstName + " " + cls.ClassTeacher.LastName
-        : null,
+                    ? cls.ClassTeacher.FirstName + " " + cls.ClassTeacher.LastName
+                    : null,
 
                 Students = cls.Students.Select(s => new UserDto
                 {
@@ -92,7 +110,6 @@ namespace SchoolManagementSystem.Api.Controllers
                     FullName = t.Teacher.FirstName + " " + t.Teacher.LastName
                 }).ToList(),
 
-
                 Subjects = cls.Subjects.Select(s =>
                     s.Subject.Name
                 ).ToList()
@@ -101,7 +118,12 @@ namespace SchoolManagementSystem.Api.Controllers
             return Ok(result);
         }
 
-        // POST: sms/class
+        // =========================================
+        // ADD CLASS
+        // Principal Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpPost("class")]
         public async Task<IActionResult> AddClass([FromBody] Class cls)
         {
@@ -109,6 +131,7 @@ namespace SchoolManagementSystem.Api.Controllers
                 return BadRequest(ModelState);
 
             _context.Classes.Add(cls);
+
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -118,9 +141,17 @@ namespace SchoolManagementSystem.Api.Controllers
             });
         }
 
-        // PUT: sms/class/1
+        // =========================================
+        // UPDATE CLASS
+        // Principal Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpPut("class/{id}")]
-        public async Task<IActionResult> UpdateClass(int id, [FromBody] Class updatedClass)
+        public async Task<IActionResult> UpdateClass(
+            int id,
+            [FromBody] Class updatedClass
+        )
         {
             var cls = await _context.Classes.FindAsync(id);
 
@@ -138,7 +169,12 @@ namespace SchoolManagementSystem.Api.Controllers
             });
         }
 
-        // DELETE: sms/class/1
+        // =========================================
+        // DELETE CLASS
+        // Principal Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpDelete("class/{id}")]
         public async Task<IActionResult> DeleteClass(int id)
         {
@@ -148,20 +184,32 @@ namespace SchoolManagementSystem.Api.Controllers
                 return NotFound("Class not found");
 
             _context.Classes.Remove(cls);
+
             await _context.SaveChangesAsync();
 
-            return Ok($"Class {id} Deleted Successfully");
+            return Ok(new
+            {
+                message = $"Class {id} Deleted Successfully"
+            });
         }
 
-        // =============================
-        // RELATIONSHIP ENDPOINTS
-        // =============================
+        // =========================================
+        // ASSIGN STUDENT
+        // Principal Only
+        // =========================================
 
+        [Authorize(Roles = "Principal")]
         [HttpPost("class/{classId}/add-student/{studentId}")]
-        public async Task<IActionResult> AddStudent(int classId, int studentId)
+        public async Task<IActionResult> AddStudent(
+            int classId,
+            int studentId
+        )
         {
             var exists = await _context.ClassStudents
-                .AnyAsync(cs => cs.ClassId == classId && cs.StudentId == studentId);
+                .AnyAsync(cs =>
+                    cs.ClassId == classId &&
+                    cs.StudentId == studentId
+                );
 
             if (exists)
                 return BadRequest("Student already assigned");
@@ -177,11 +225,23 @@ namespace SchoolManagementSystem.Api.Controllers
             return Ok("Student assigned successfully");
         }
 
+        // =========================================
+        // ASSIGN TEACHER
+        // Principal Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpPost("class/{classId}/add-teacher/{teacherId}")]
-        public async Task<IActionResult> AddTeacher(int classId, int teacherId)
+        public async Task<IActionResult> AddTeacher(
+            int classId,
+            int teacherId
+        )
         {
             var exists = await _context.ClassTeachers
-                .AnyAsync(ct => ct.ClassId == classId && ct.TeacherId == teacherId);
+                .AnyAsync(ct =>
+                    ct.ClassId == classId &&
+                    ct.TeacherId == teacherId
+                );
 
             if (exists)
                 return BadRequest("Teacher already assigned");
@@ -197,11 +257,23 @@ namespace SchoolManagementSystem.Api.Controllers
             return Ok("Teacher assigned successfully");
         }
 
+        // =========================================
+        // ASSIGN SUBJECT
+        // Principal Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpPost("class/{classId}/add-subject/{subjectId}")]
-        public async Task<IActionResult> AddSubject(int classId, int subjectId)
+        public async Task<IActionResult> AddSubject(
+            int classId,
+            int subjectId
+        )
         {
             var exists = await _context.ClassSubjects
-                .AnyAsync(cs => cs.ClassId == classId && cs.SubjectId == subjectId);
+                .AnyAsync(cs =>
+                    cs.ClassId == classId &&
+                    cs.SubjectId == subjectId
+                );
 
             if (exists)
                 return BadRequest("Subject already assigned");

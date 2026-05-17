@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+
 using SchoolManagementSystem.Api.Data;
 using SchoolManagementSystem.Api.Models;
 
@@ -7,6 +9,7 @@ namespace SchoolManagementSystem.Api.Controllers
 {
     [ApiController]
     [Route("sms")]
+    [Authorize]
     public class SubjectController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -16,15 +19,24 @@ namespace SchoolManagementSystem.Api.Controllers
             _context = context;
         }
 
-        // GET: sms/subjects
+        // =========================================
+        // GET SUBJECTS
+        // =========================================
+
+        [Authorize(Roles = "Principal,Teacher,Student")]
         [HttpGet("subjects")]
         public async Task<IActionResult> GetSubjects()
         {
             var subjects = await _context.Subjects.ToListAsync();
+
             return Ok(subjects);
         }
 
-        // GET: sms/subject/1
+        // =========================================
+        // GET SUBJECT BY ID
+        // =========================================
+
+        [Authorize(Roles = "Principal,Teacher,Student")]
         [HttpGet("subject/{id}")]
         public async Task<IActionResult> GetSubjectById(int id)
         {
@@ -39,14 +51,22 @@ namespace SchoolManagementSystem.Api.Controllers
             return Ok(subject);
         }
 
-        // POST: sms/subject
+        // =========================================
+        // ADD SUBJECT
+        // Principal Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpPost("subject")]
-        public async Task<IActionResult> AddSubject([FromBody] Subject subject)
+        public async Task<IActionResult> AddSubject(
+            [FromBody] Subject subject
+        )
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             _context.Subjects.Add(subject);
+
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -56,9 +76,17 @@ namespace SchoolManagementSystem.Api.Controllers
             });
         }
 
-        // PUT: sms/subject/1
+        // =========================================
+        // UPDATE SUBJECT
+        // Principal Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpPut("subject/{id}")]
-        public async Task<IActionResult> UpdateSubject(int id, [FromBody] Subject updatedSubject)
+        public async Task<IActionResult> UpdateSubject(
+            int id,
+            [FromBody] Subject updatedSubject
+        )
         {
             var subject = await _context.Subjects.FindAsync(id);
 
@@ -76,7 +104,12 @@ namespace SchoolManagementSystem.Api.Controllers
             });
         }
 
-        // DELETE: sms/subject/1
+        // =========================================
+        // DELETE SUBJECT
+        // Principal Only
+        // =========================================
+
+        [Authorize(Roles = "Principal")]
         [HttpDelete("subject/{id}")]
         public async Task<IActionResult> DeleteSubject(int id)
         {
@@ -86,9 +119,13 @@ namespace SchoolManagementSystem.Api.Controllers
                 return NotFound("Subject not found");
 
             _context.Subjects.Remove(subject);
+
             await _context.SaveChangesAsync();
 
-            return Ok($"Subject {id} Deleted Successfully");
+            return Ok(new
+            {
+                message = $"Subject {id} Deleted Successfully"
+            });
         }
     }
 }
