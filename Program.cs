@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SchoolManagementSystem.Api.Data;
 using System.Text;
+using SchoolManagementSystem.Api.Services;
 
 Env.Load("./.env");
 
@@ -88,7 +89,7 @@ builder.Services.AddAuthorization();
 // ===============================
 
 builder.Services.AddScoped<JwtService>();
-
+builder.Services.AddHttpClient<AIService>();
 var app = builder.Build();
 
 // ===============================

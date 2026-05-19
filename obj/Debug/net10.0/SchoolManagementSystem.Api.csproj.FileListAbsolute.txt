@@ -111,3 +111,4 @@ C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSyst
 C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSystem.Api\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSystem.Api\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSystem.Api\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\Hassan\Desktop\Projects\SchoolManagementSystem.Api\SchoolManagementSystem.Api\bin\Debug\net10.0\Newtonsoft.Json.dll
